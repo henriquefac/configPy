@@ -1,5 +1,7 @@
 from pathlib import Path
 from typing import Union
+import os
+from dotenv import load_dotenv
 
 class DirManager():
     def __init__(self, dir_path: Union[Path, "DirManager"]):
@@ -25,4 +27,12 @@ class DirManager():
             except KeyError:
                 continue
         raise KeyError(f"({key}) não foi encontrado em ({self.dir_path}) e subdiretórios")
+
+class Config:
+    # carregar variáveis
+    load_dotenv()
+    # Paths
+    BASE_PATH = Path(os.getenv(PYTHONPATH)).resolve().parent
+    FILE_DIR_PATH = FILE_DIR_PATH / "files"
+
 
