@@ -31,6 +31,8 @@ if [ ! -d ".venv" ]; then
 
 	source .venv/bin/activate
 
+	pip install python-dotenv
+	
 	if [ -f "requirements.txt" ]; then
 		pip install -r requirements.txt
 	else

@@ -21,7 +21,7 @@ class DirManager():
             return dirs[key]
         if key in files:
             return files[key]
-        for sub_dir in dirs.values()
+        for sub_dir in dirs.values():
             try:
                 return sub_dir[key]
             except KeyError:
@@ -32,7 +32,7 @@ class Config:
     # carregar variáveis
     load_dotenv()
     # Paths
-    BASE_PATH = Path(os.getenv(PYTHONPATH)).resolve().parent
+    BASE_PATH = Path(os.getenv("PYTHONPATH")).resolve().parent
     FILE_DIR_PATH = BASE_PATH / "files"
     SRC_DIR_PATH = BASE_PATH / "src"
 
