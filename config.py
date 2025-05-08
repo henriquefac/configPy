@@ -33,6 +33,14 @@ class Config:
     load_dotenv()
     # Paths
     BASE_PATH = Path(os.getenv(PYTHONPATH)).resolve().parent
-    FILE_DIR_PATH = FILE_DIR_PATH / "files"
+    FILE_DIR_PATH = BASE_PATH / "files"
+    SRC_DIR_PATH = BASE_PATH / "src"
+
+    @classmethod
+    def get_dir_files(cls) -> DirManager:
+        return DirManager(cls.FILE_DIR_PATH)
+    @classmethod
+    def get_dir_src(cls) -> DirManager:
+        return DirManager(cls.SRC_DIR_PATH)
 
 
