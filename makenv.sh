@@ -18,7 +18,7 @@ if [ ! -d "src" ]; then
 
 	mkdir src
 	touch src/data_dir.txt
-	echo "Diretório reservado para os dados necessários" >> file/data_dir.txt
+	echo "Diretório reservado para os dados necessários" >> src/data_dir.txt
 fi
 
 
