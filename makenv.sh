@@ -5,12 +5,12 @@ echo "Iniciando projeto"
 
 # verificar se na raiz do projeto existe arquivo files
 
-if [ ! -d "file" ]; then
+if [ ! -d "files" ]; then
 	echo "Criando diretório de arquivos"
 	
-	mkdir file
-	touch file/data_dir.txt
-	echo "Diretório reservado para os dados necessários" >> file/data_dir.txt
+	mkdir files
+	touch files/data_dir.txt
+	echo "Diretório reservado para os dados necessários" >> files/data_dir.txt
 fi
 
 if [ ! -d "src" ]; then
