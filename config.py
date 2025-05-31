@@ -9,7 +9,7 @@ class DirManager():
     def list_dir(self)->dict[str, 'DirManager']:
         return {dir.name : DirManager(dir) for dir in self.dir_path.iterdir() if dir.is_dir()}
     def list_files(self)->dict[str, Path]:
-        return {file.name : file for file in self.dir_path.iterdir() if file.is_file()}
+        return {file.name : file for file in self.dir_path.iterdir() if file.is_file() or "." in file.name}
     def create_dir(self, name:str)->'DirManager':
         new_dir: Path = self.dir_path / name
         new_dir.mkdir(parents=True, exist_ok=True)
@@ -38,10 +38,8 @@ class DirManager():
         raise KeyError(f"({key}) não foi encontrado em ({self.dir_path}) e subdiretórios")
 
 class Config:
-    # carregar variáveis
-    load_dotenv()
     # Paths
-    BASE_PATH = Path(os.getenv("PYTHONPATH")).resolve().parent
+    BASE_PATH = Path(os.getenv("PYTHONPATH")).resolve()
     FILE_DIR_PATH = BASE_PATH / "files"
     SRC_DIR_PATH = BASE_PATH / "src"
 
