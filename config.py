@@ -10,13 +10,22 @@ class DirManager():
         return {dir.name : DirManager(dir) for dir in self.dir_path.iterdir() if dir.is_dir()}
     def list_files(self)->dict[str, Path]:
         return {file.name : file for file in self.dir_path.iterdir() if file.is_file()}
+    def create_dir(self, name:str)->'DirManager':
+        new_dir: Path = self.dir_path / name
+        new_dir.mkdir(parents=True, exist_ok=True)
+        return DirManager(new_dir)
+    def create_file_path(self, name:str, suffix:str, exist_ok=False)->Path:
+        new_file_path: Path = self.dir_path / f"{name}.{suffix}"
+        if new_file_path.exists() and exist_ok:
+            raise ValueError(f"O arquivo <{new_file_path}> já existe")
+        return new_file_path
     def __str__(self) -> str:
         return str(self.dir_path)
     def __repr__(self) -> str:
         return f"DirManager({self.dir_path})"
     def __getitem__(self, key: str)-> 'DirManager':
         dirs = self.list_dir()
-        files = self.list_file()
+        files = self.list_files()
         if key in dirs:
             return dirs[key]
         if key in files:
