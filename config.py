@@ -9,7 +9,7 @@ class DirManager():
     def list_dir(self)->dict[str, 'DirManager']:
         return {dir.name : DirManager(dir) for dir in self.dir_path.iterdir() if dir.is_dir()}
     def list_files(self)->dict[str, Path]:
-        return {file.name : file for file in self.dir_path.iterdir() if file.is_file() or "." in file.name}
+        return {file.name : file for file in self.dir_path.iterdir() if file.is_file()}
     def create_dir(self, name:str)->'DirManager':
         new_dir: Path = self.dir_path / name
         new_dir.mkdir(parents=True, exist_ok=True)
