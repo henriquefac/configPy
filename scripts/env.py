@@ -49,7 +49,7 @@ class OpenAIENV:
 class EnvManager:
     _instance: "EnvManager|None" = None
     _lock: Lock = Lock()
-    _openai : OpenAIENV
+    _openai : OpenAIENV | None = None
     def __new__(cls):
         if cls._instance is None:
             with cls._lock:
