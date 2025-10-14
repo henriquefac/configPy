@@ -1,22 +1,10 @@
 import os
+from dataclasses import dataclass, field
+from threading import Lock
 from dotenv import load_dotenv
 
 load_dotenv()
-
-
-
-
-class EnvManager:
-    # 1. Padrão Singleton: Garante que só há uma instância
-    _instance = None
-
-    def __new__(cls):
-        # Implementação do Singleton
-        if cls._instance is None:
-            cls._instance = super(EnvManager, cls).__new__(cls)
-        return cls._instance
-
-    def _get_required_env(self, key: str) -> str:
+def _get_required_env(key: str) -> str:
         """
         Busca uma variável de ambiente pelo nome (key).
         Levanta um erro se a variável não estiver definida.
@@ -29,12 +17,49 @@ class EnvManager:
                 "Verifique seu arquivo 'token.env' ou as variáveis do sistema."
             )
         return value
+@dataclass
+class OpenAIENV:
+    AZURE_ENDPOINT: str
+    AZURE_OPENAI_API_KEY: str
+    AZURE_OPENAI_API_VERSION: str
+    MODEL_NAME: str
+    EMBEDDING_MODEL: str
 
-    def _get_optional_env(self, key: str, default: str| None = None) -> str | None:
-        """
-        Busca uma variável de ambiente opcional.
-        Retorna um valor padrão (default) se não estiver definida.
-        """
-        return os.getenv(key, default)
+    _instance: "OpenAIENV|None" = field(default=None, init=False, repr=False)
+    _lock: Lock = field(default=Lock(), init=False, repr=False)
 
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+    @classmethod
+    def get(cls) -> "OpenAIENV":
+        if cls._instance is None:
+            cls._instance = cls(
+                _get_required_env("AZURE_ENDPOINT"),
+                _get_required_env("AZURE_OPENAI_API_KEY"),
+                _get_required_env("AZURE_OPENAI_API_VERSION"),
+                _get_required_env("MODEL_NAME"),
+                _get_required_env("EMBEDDING_MODEL")
+            )
+        return cls._instance
 
+class EnvManager:
+    _instance: "EnvManager|None" = None
+    _lock: Lock = Lock()
+    openai : OpenAIENV
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    # Initialize OpenAIENV singleton
+                    cls._instance.openai = OpenAIENV.get()
+        return cls._instance
+
+    @property
+    def openai_env(self) -> OpenAIENV:
+        """Access the OpenAI environment singleton."""
+        return self.openai    
