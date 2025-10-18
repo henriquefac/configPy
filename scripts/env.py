@@ -34,8 +34,7 @@ class ENVDomain:
 class HuggingFaceEnv(ENVDomain):
     """Domínio para variáveis de ambiente relacionadas ao HuggingFace."""
     HF_TOKEN: str
-    HF_MODEL_CACHE: str
-
+    HF_DIARIZE_MODEL:str
 # --- Mapeamento de Domínios ---
 
 # Função para carregar as variáveis do domínio HuggingFaceEnv
@@ -43,7 +42,7 @@ def load_huggingface_env() -> HuggingFaceEnv:
     return HuggingFaceEnv(
         HF_TOKEN=_get_required_env("HF_TOKEN"),
         # Exemplo de variável opcional com conversão de tipo implícita
-        HF_MODEL_CACHE=_get_optional_env("HF_MODEL_CACHE", "cache_dir"),
+        HF_DIARIZE_MODEL=_get_optional_env("HF_DIARIZE_MODEL", "cache_dir"),
     )
 
 # Tipo genérico para as classes de domínio
