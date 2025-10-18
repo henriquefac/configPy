@@ -36,13 +36,6 @@ class HuggingFaceEnv(ENVDomain):
     HF_TOKEN: str
     HF_MODEL_CACHE: str
 
-@dataclass(frozen=True)
-class DatabaseEnv(ENVDomain):
-    """Domínio para variáveis de ambiente relacionadas ao Banco de Dados."""
-    DB_HOST: str
-    DB_PORT: int
-    DB_USER: str
-
 # --- Mapeamento de Domínios ---
 
 # Função para carregar as variáveis do domínio HuggingFaceEnv
@@ -53,22 +46,12 @@ def load_huggingface_env() -> HuggingFaceEnv:
         HF_MODEL_CACHE=_get_optional_env("HF_MODEL_CACHE", "cache_dir"),
     )
 
-# Função para carregar as variáveis do domínio DatabaseEnv
-def load_database_env() -> DatabaseEnv:
-    return DatabaseEnv(
-        DB_HOST=_get_required_env("DB_HOST"),
-        # Exemplo de conversão de tipo explícita para inteiro
-        DB_PORT=int(_get_required_env("DB_PORT")),
-        DB_USER=_get_required_env("DB_USER"),
-    )
-
 # Tipo genérico para as classes de domínio
 D = TypeVar('D', bound=ENVDomain)
 
 # Dicionário de mapeamento: Onde a chave é a CLASSE e o valor é a FUNÇÃO DE CARREGAMENTO.
 DOMAIN_LOADERS: dict[Type[ENVDomain], Callable[[], ENVDomain]] = {
     HuggingFaceEnv: load_huggingface_env,
-    DatabaseEnv: load_database_env,
     # Adicione novos domínios aqui para torná-los acessíveis
 }
 
@@ -115,9 +98,6 @@ class EnvManager:
         """Acesso facilitado ao domínio HuggingFaceEnv."""
         return self._get_domain_instance(HuggingFaceEnv)
 
-    def database(self) -> DatabaseEnv:
-        """Acesso facilitado ao domínio DatabaseEnv."""
-        return self._get_domain_instance(DatabaseEnv)
 
     # --- Método Genérico (para customização) ---
 
