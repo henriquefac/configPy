@@ -1,5 +1,5 @@
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from threading import Lock
 from typing import ClassVar, TypeVar, Type, Callable, Any
 from dotenv import load_dotenv
@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Funções Utilitárias ---
+
 
 def _get_required_env(key: str) -> str:
     """Busca uma variável de ambiente e levanta um erro se não for encontrada."""
@@ -19,31 +20,41 @@ def _get_required_env(key: str) -> str:
         )
     return value
 
+
 def _get_optional_env(key: str, default: Any) -> Any:
     """Busca uma variável de ambiente, retornando um default se não for encontrada."""
     return os.getenv(key, default)
 
+
 # --- Classes de Domínio ---
 
-@dataclass(frozen=True) # frozen=True garante imutabilidade após a criação
+
+@dataclass(frozen=True)  # frozen=True garante imutabilidade após a criação
 class ENVDomain:
     """Classe base abstrata para domínios de variáveis de ambiente."""
+
     pass
+
 
 @dataclass(frozen=True)
 class HuggingFaceEnv(ENVDomain):
     """Domínio para variáveis de ambiente relacionadas ao HuggingFace."""
+
     HF_TOKEN: str
     HF_MODEL_CACHE: str
+
 
 @dataclass(frozen=True)
 class DatabaseEnv(ENVDomain):
     """Domínio para variáveis de ambiente relacionadas ao Banco de Dados."""
+
     DB_HOST: str
     DB_PORT: int
     DB_USER: str
 
+
 # --- Mapeamento de Domínios ---
+
 
 # Função para carregar as variáveis do domínio HuggingFaceEnv
 def load_huggingface_env() -> HuggingFaceEnv:
@@ -52,6 +63,7 @@ def load_huggingface_env() -> HuggingFaceEnv:
         # Exemplo de variável opcional com conversão de tipo implícita
         HF_MODEL_CACHE=_get_optional_env("HF_MODEL_CACHE", "cache_dir"),
     )
+
 
 # Função para carregar as variáveis do domínio DatabaseEnv
 def load_database_env() -> DatabaseEnv:
@@ -62,8 +74,9 @@ def load_database_env() -> DatabaseEnv:
         DB_USER=_get_required_env("DB_USER"),
     )
 
+
 # Tipo genérico para as classes de domínio
-D = TypeVar('D', bound=ENVDomain)
+D = TypeVar("D", bound=ENVDomain)
 
 # Dicionário de mapeamento: Onde a chave é a CLASSE e o valor é a FUNÇÃO DE CARREGAMENTO.
 DOMAIN_LOADERS: dict[Type[ENVDomain], Callable[[], ENVDomain]] = {
@@ -75,10 +88,12 @@ DOMAIN_LOADERS: dict[Type[ENVDomain], Callable[[], ENVDomain]] = {
 
 # --- Manager Singleton ---
 
+
 class EnvManager:
     """
     Singleton central para gerenciar e fornecer acesso aos domínios de variáveis.
     """
+
     _instance: ClassVar["EnvManager|None"] = None
     _lock: ClassVar[Lock] = Lock()
     _domains: dict[Type[ENVDomain], ENVDomain]
@@ -94,33 +109,54 @@ class EnvManager:
                     cls._instance._domains = {}
         return cls._instance
 
-    def _get_domain_instance(self, domain_class: Type[D]) -> D:
+    # Novo método de classe (ou estático) para acessar a única instância
+    @classmethod
+    def get_instance(cls) -> "EnvManager":
+        """
+        Garante que o Singleton seja criado e retorna a única instância.
+        Pode ser chamado como EnvManager.get_instance().
+        """
+        if cls._instance is None:
+            # Chama o __new__ para inicializar e criar a instância
+            cls()
+        return cls._instance  # type: ignore
+
+    # Refatorado: Deixamos a lógica de carregamento como método de instância,
+    # mas o acesso a ele será feito via o método de classe.
+    def _load_domain_instance(self, domain_class: Type[D]) -> D:
         """Carrega e armazena uma instância de domínio (Lazy Loading)."""
         if domain_class not in self._domains:
-            # 1. Verifica se a classe de domínio está mapeada no DOMAIN_LOADERS
             if domain_class not in DOMAIN_LOADERS:
-                raise ValueError(f"Domínio '{domain_class.__name__}' não mapeado no DOMAIN_LOADERS.")
+                raise ValueError(
+                    f"Domínio '{domain_class.__name__}' não mapeado no DOMAIN_LOADERS."
+                )
 
-            # 2. Executa a função de carregamento e armazena o resultado
             loader_func = DOMAIN_LOADERS[domain_class]
-            # A chamada do loader_func executa a busca no os.getenv()
             self._domains[domain_class] = loader_func()
 
-        # 3. Retorna a instância armazenada
-        return self._domains[domain_class] # type: ignore
+        return self._domains[domain_class]  # type: ignore
 
-    # --- Métodos de Acesso (Facilitadores) ---
+    # --- Métodos de Acesso (Classmethods) ---
 
-    def huggingface(self) -> HuggingFaceEnv:
-        """Acesso facilitado ao domínio HuggingFaceEnv."""
-        return self._get_domain_instance(HuggingFaceEnv)
+    @classmethod
+    def huggingface(cls) -> HuggingFaceEnv:
+        """Acesso facilitado ao domínio HuggingFaceEnv via classmethod."""
+        # 1. Obtém a única instância do Singleton
+        manager_instance = cls.get_instance()
 
-    def database(self) -> DatabaseEnv:
-        """Acesso facilitado ao domínio DatabaseEnv."""
-        return self._get_domain_instance(DatabaseEnv)
+        # 2. Chama o método de carregamento na instância
+        return manager_instance._load_domain_instance(HuggingFaceEnv)
+
+    @classmethod
+    def database(cls) -> DatabaseEnv:
+        """Acesso facilitado ao domínio DatabaseEnv via classmethod."""
+        manager_instance = cls.get_instance()
+        return manager_instance._load_domain_instance(DatabaseEnv)
 
     # --- Método Genérico (para customização) ---
 
-    def get_domain(self, domain_class: Type[D]) -> D:
-        """Acesso genérico a qualquer domínio configurado."""
-        return self._get_domain_instance(domain_class)
+    @classmethod
+    def get_domain(cls, domain_class: Type[D]) -> D:
+        """Acesso genérico a qualquer domínio configurado via classmethod."""
+        manager_instance = cls.get_instance()
+        return manager_instance._load_domain_instance(domain_class)
