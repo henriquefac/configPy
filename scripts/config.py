@@ -10,6 +10,7 @@ class Config:
     SRC_DIR_PATH = BASE_PATH / "src"
     OUTPUT_FILES = FILE_DIR_PATH / "output"
     
+    NOISE_MODEL = BASE_PATH / "rnnoise-models"
     
     @classmethod
     def get_dir_files(cls) -> DirManager:
@@ -23,4 +24,6 @@ class Config:
     def get_dir_output(cls) -> DirManager:
         return DirManager(cls.OUTPUT_FILES)
 
-
+    @classmethod
+    def get_dir_noise_models(cls) -> DirManager:
+        return DirManager(cls.NOISE_MODEL)
