@@ -37,10 +37,15 @@ class ENVDomain:
 
 
 @dataclass(frozen=True)
+class KaggleEnv(ENVDomain):
+    KGG_DATASET: str
+
+
+@dataclass(frozen=True)
 class HuggingFaceEnv(ENVDomain):
     """Domínio para variáveis de ambiente relacionadas ao HuggingFace."""
 
-    HF_TOKEN: str
+    # HF_TOKEN: str
     HF_MODEL_CACHE: str
 
 
@@ -59,20 +64,14 @@ class DatabaseEnv(ENVDomain):
 # Função para carregar as variáveis do domínio HuggingFaceEnv
 def load_huggingface_env() -> HuggingFaceEnv:
     return HuggingFaceEnv(
-        HF_TOKEN=_get_required_env("HF_TOKEN"),
+        # HF_TOKEN=_get_required_env("HF_TOKEN"),
         # Exemplo de variável opcional com conversão de tipo implícita
         HF_MODEL_CACHE=_get_optional_env("HF_MODEL_CACHE", "cache_dir"),
     )
 
 
-# Função para carregar as variáveis do domínio DatabaseEnv
-def load_database_env() -> DatabaseEnv:
-    return DatabaseEnv(
-        DB_HOST=_get_required_env("DB_HOST"),
-        # Exemplo de conversão de tipo explícita para inteiro
-        DB_PORT=int(_get_required_env("DB_PORT")),
-        DB_USER=_get_required_env("DB_USER"),
-    )
+def load_kaggle_env() -> KaggleEnv:
+    return KaggleEnv(KGG_DATASET=_get_required_env("DATASET"))
 
 
 # Tipo genérico para as classes de domínio
@@ -81,7 +80,7 @@ D = TypeVar("D", bound=ENVDomain)
 # Dicionário de mapeamento: Onde a chave é a CLASSE e o valor é a FUNÇÃO DE CARREGAMENTO.
 DOMAIN_LOADERS: dict[Type[ENVDomain], Callable[[], ENVDomain]] = {
     HuggingFaceEnv: load_huggingface_env,
-    DatabaseEnv: load_database_env,
+    KaggleEnv: load_kaggle_env,
     # Adicione novos domínios aqui para torná-los acessíveis
 }
 
@@ -148,10 +147,9 @@ class EnvManager:
         return manager_instance._load_domain_instance(HuggingFaceEnv)
 
     @classmethod
-    def database(cls) -> DatabaseEnv:
-        """Acesso facilitado ao domínio DatabaseEnv via classmethod."""
+    def kaggleDataset(cls) -> KaggleEnv:
         manager_instance = cls.get_instance()
-        return manager_instance._load_domain_instance(DatabaseEnv)
+        return manager_instance._load_domain_instance(KaggleEnv)
 
     # --- Método Genérico (para customização) ---
 
