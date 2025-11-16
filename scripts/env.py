@@ -35,6 +35,11 @@ class ENVDomain:
 
     pass
 
+@dataclass(frozen=True)
+class OllamaEnv(ENVDomain):
+    EMBEDDING_MODEL:str
+    BASE_OLLAMA:str
+    PORT_OLLAMA:str
 
 @dataclass(frozen=True)
 class HuggingFaceEnv(ENVDomain):
@@ -74,14 +79,21 @@ def load_database_env() -> DatabaseEnv:
         DB_USER=_get_required_env("DB_USER"),
     )
 
+def load_ollama_env() -> OllamaEnv:
+    return OllamaEnv(
+        EMBEDDING_MODEL=_get_required_env("EMBEDDING_MODEL"),
+        BASE_OLLAMA=_get_required_env("BASE_OLLAMA"),
+        PORT_OLLAMA=_get_required_env("PORT_OLLAMA")
+    )
 
 # Tipo genérico para as classes de domínio
 D = TypeVar("D", bound=ENVDomain)
 
 # Dicionário de mapeamento: Onde a chave é a CLASSE e o valor é a FUNÇÃO DE CARREGAMENTO.
 DOMAIN_LOADERS: dict[Type[ENVDomain], Callable[[], ENVDomain]] = {
-    HuggingFaceEnv: load_huggingface_env,
-    DatabaseEnv: load_database_env,
+    OllamaEnv: load_ollama_env
+    # HuggingFaceEnv: load_huggingface_env,
+    # DatabaseEnv: load_database_env,
     # Adicione novos domínios aqui para torná-los acessíveis
 }
 
@@ -153,6 +165,11 @@ class EnvManager:
         manager_instance = cls.get_instance()
         return manager_instance._load_domain_instance(DatabaseEnv)
 
+
+    @classmethod
+    def ollama(cls) -> OllamaEnv:
+        manager_instance = cls.get_instance()
+        return manager_instance._load_domain_instance(OllamaEnv)
     # --- Método Genérico (para customização) ---
 
     @classmethod
