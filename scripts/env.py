@@ -44,6 +44,13 @@ class HuggingFaceEnv(ENVDomain):
     HF_TOKEN: str
     HF_DIARIZE_MODEL: str
 
+@dataclass(frozen=True)
+class GeminiEnv(ENVDomain):
+    """Domínio para variáveis de ambiente relacionadas ao HuggingFace."""
+
+    GEMINI_KEY: str
+
+
 
 # --- Mapeamento de Domínios ---
 
@@ -56,6 +63,11 @@ def load_huggingface_env() -> HuggingFaceEnv:
         HF_DIARIZE_MODEL=_get_optional_env("HF_DIARIZE_MODEL", "cache_dir"),
     )
 
+def load_gemini_env() -> GeminiEnv:
+    return GeminiEnv(
+        GEMINI_KEY=_get_required_env("GEMINI_API_KEY")
+    )
+
 
 # Tipo genérico para as classes de domínio
 D = TypeVar("D", bound=ENVDomain)
@@ -63,6 +75,7 @@ D = TypeVar("D", bound=ENVDomain)
 # Dicionário de mapeamento: Onde a chave é a CLASSE e o valor é a FUNÇÃO DE CARREGAMENTO.
 DOMAIN_LOADERS: dict[Type[ENVDomain], Callable[[], ENVDomain]] = {
     HuggingFaceEnv: load_huggingface_env,
+    GeminiEnv: load_gemini_env,
     # Adicione novos domínios aqui para torná-los acessíveis
 }
 
@@ -127,6 +140,12 @@ class EnvManager:
 
         # 2. Chama o método de carregamento na instância
         return manager_instance._load_domain_instance(HuggingFaceEnv)
+
+    @classmethod
+    def gemini(cls) -> GeminiEnv:
+        manager_instance = cls.get_instance()
+
+        return manager_instance._load_domain_instance(GeminiEnv)
 
     # --- Método Genérico (para customização) ---
 
