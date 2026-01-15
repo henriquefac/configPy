@@ -43,6 +43,15 @@ class HuggingFaceEnv(ENVDomain):
     HF_TOKEN: str
     HF_MODEL_CACHE: str
 
+@dataclass(frozen=True)
+class AzureEnv(ENVDomain):
+    """Domínio para variáveis de ambiente relacionadas ao HuggingFace."""
+    AZURE_ENDPOINT: str
+    AZURE_OPENAI_API_KEY: str
+    AZURE_OPENAI_API_VERSION: str
+    MODEL_NAME: str
+    EMBEDDING_MODEL: str
+
 
 @dataclass(frozen=True)
 class DatabaseEnv(ENVDomain):
@@ -74,14 +83,22 @@ def load_database_env() -> DatabaseEnv:
         DB_USER=_get_required_env("DB_USER"),
     )
 
+def load_database_env() -> AzureEnv:
+    return AzureEnv(
+        AZURE_ENDPOINT=_get_required_env("AZURE_ENDPOINT"),
+        AZURE_OPENAI_API_KEY=_get_optional_env("AZURE_OPENAI_API_KEY"),
+        AZURE_OPENAI_API_VERSION=_get_required_env("AZURE_OPENAI_API_VERSION"),
+        MODEL_NAME=_get_required_env("MODEL_NAME"),
+        EMBEDDING_MODEL=_get_required_env("EMBEDDING_MODEL")
+
+    )
 
 # Tipo genérico para as classes de domínio
 D = TypeVar("D", bound=ENVDomain)
 
 # Dicionário de mapeamento: Onde a chave é a CLASSE e o valor é a FUNÇÃO DE CARREGAMENTO.
 DOMAIN_LOADERS: dict[Type[ENVDomain], Callable[[], ENVDomain]] = {
-    HuggingFaceEnv: load_huggingface_env,
-    DatabaseEnv: load_database_env,
+    AzureEnv: load_database_env,
     # Adicione novos domínios aqui para torná-los acessíveis
 }
 
@@ -137,21 +154,10 @@ class EnvManager:
         return self._domains[domain_class]  # type: ignore
 
     # --- Métodos de Acesso (Classmethods) ---
-
     @classmethod
-    def huggingface(cls) -> HuggingFaceEnv:
-        """Acesso facilitado ao domínio HuggingFaceEnv via classmethod."""
-        # 1. Obtém a única instância do Singleton
+    def azure(cls) -> AzureEnv:
         manager_instance = cls.get_instance()
-
-        # 2. Chama o método de carregamento na instância
-        return manager_instance._load_domain_instance(HuggingFaceEnv)
-
-    @classmethod
-    def database(cls) -> DatabaseEnv:
-        """Acesso facilitado ao domínio DatabaseEnv via classmethod."""
-        manager_instance = cls.get_instance()
-        return manager_instance._load_domain_instance(DatabaseEnv)
+        return manager_instance._load_domain_instance(AzureEnv)
 
     # --- Método Genérico (para customização) ---
 
